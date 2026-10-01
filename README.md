@@ -22,7 +22,7 @@ A virtual reality application developed with **Unity** and the **Meta All-in-One
 
 ### 1. Hand Tracking & Controller Auto-Switching
 - Full support for both **Hand Tracking** and **Meta Quest Touch Controllers** with seamless auto-switching.
-- Configured hand grab snap poses for all interactables using Meta Interaction SDK (`Oculus.Interaction`).
+- Configured hand grab for all interactables using Meta Interaction SDK (`Oculus.Interaction`).
 
 ### 2. Shape Objects & Auto-Return Mechanics
 - **3 Interactable Shapes:** Cube, Sphere, and Cylinder.
@@ -61,10 +61,8 @@ A virtual reality application developed with **Unity** and the **Meta All-in-One
 - **Audio Feedback (`AudioManager`):** Synthesizes & plays audio SFX for Hover, Grab, Place, Wrong Placement, and Completion.
 - **Haptic Feedback (`HapticManager`):** Delivers controller vibration pulses for Hover, Grab, Place, and Wrong Placement via `OVRInput` and `UnityEngine.XR.InputDevice`.
 
-### 7. Door Animations & VR Screen Transitions
+### 7. Door Animations
 - **Door Opening Animation:** Triggers `doorAnimator` with parameter `"Open"` upon solving the puzzle.
-- **Door Exit Interaction (`DoorExitTrigger`):** When the player walks through or interacts with the open door, a smooth **VR Screen Fade to Black transition** (`VRScreenFader`) executes while displaying completion text.
-
 ---
 
 ## ⚙️ Setup & Installation Instructions
