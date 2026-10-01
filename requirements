@@ -1,0 +1,83 @@
+Overview & Objective
+
+Develop a small VR application using Unity and the Meta All-in-One SDK that demonstrates key interaction systems, hand tracking, UI, animations, and core gameplay mechanics.
+
+Technical Requirements
+
+Engine: Unity 2022.3 LTS or Unity 6
+
+SDK: Meta All-in-One SDK
+
+Target Hardware: Meta Quest 3 / Quest 3S / Quest Pro
+
+Language: C#
+
+Functional Requirements
+
+Hand Tracking & Controllers
+
+Support both Hand Tracking and Touch Controllers with seamless auto-switching.
+
+Configure Hand Grab Snap Poses for all interactable objects.
+
+Object Interaction
+
+Create three grabbable and throwable objects: Cube, Sphere, and Cylinder.
+
+Configure hand snap poses for each object.
+
+Implement auto-return to original position if an object is dropped outside the designated target zone.
+
+Placement Puzzle Mechanics
+
+Create three distinct target sockets (one matching each shape).
+
+Enforce object-to-socket validation (prevent incorrect placements).
+
+On Incorrect Placement: Display an explicit error message.
+
+On Correct Placement: Snap object into place, disable further grabbing, trigger a success audio cue, and change socket color to green.
+
+On Puzzle Completion (All 3 placed): Trigger a door opening animation and display a "Task Completed" message.
+
+World Space UI
+
+Floating dashboard displaying: Objects Remaining count, Timer, Reset Button, and Restart Button.
+
+Wrist-Mounted Hand Menu
+
+Menu anchored to the wrist containing options to: Reset Scene, Restart Task, and Toggle Hand Tracking Visualization.
+
+Interaction Feedback & Audio/Haptics
+
+Highlight objects on hover.
+
+Visual and audio feedback for Hover, Grab, Place, Wrong Placement, and Completion.
+
+Haptic feedback for controller interactions.
+
+Environment Setup
+
+Create a simple room environment containing a table, lighting, a door, a placement area, and an instruction board.
+
+Animations & Polish
+
+Door opening animation, object snap animation, and UI fade-in/fade-out transitions.
+
+Performance & Code Quality
+
+Target and maintain a stable 72+ FPS on Meta Quest.
+
+Clean prefab and script organization; avoid unnecessary Update() calls.
+
+Bonus Features (Optional)
+
+Two-handed grab interaction.
+
+Hand pinch gesture to reset the scene.
+
+Voice instruction playback upon task initiation.
+
+Particle effect burst upon correct object placement.
+
+Local progress saving/restoration across app restarts.

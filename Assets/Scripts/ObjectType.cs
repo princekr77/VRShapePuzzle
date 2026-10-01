@@ -1,0 +1,1 @@
+public enum ObjectType { Cube, Sphere, Cylinder }
