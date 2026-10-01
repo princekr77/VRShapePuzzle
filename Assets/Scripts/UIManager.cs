@@ -73,24 +73,44 @@ public class UIManager : MonoBehaviour
             }
         }
 
-        // If statusText or errorText are unassigned, attach them to the primary Canvas panel
+        // Attach status and error banners slightly lower on the Canvas panel for clear visibility
         Canvas mainCanvas = FindObjectOfType<Canvas>();
         if (mainCanvas != null)
         {
             if (statusText == null)
             {
-                statusText = CreateTMPText(mainCanvas.transform, "StatusText", "", new Vector2(0, 50), 32);
+                statusText = CreateTMPText(mainCanvas.transform, "StatusText", "", new Vector2(0, -120), 32);
                 statusText.alignment = TextAlignmentOptions.Center;
                 statusText.color = Color.green;
                 statusText.gameObject.SetActive(false);
             }
+            else
+            {
+                RepositionLower(statusText, -120f);
+            }
+
             if (errorText == null)
             {
-                errorText = CreateTMPText(mainCanvas.transform, "ErrorText", "", new Vector2(0, -50), 28);
+                errorText = CreateTMPText(mainCanvas.transform, "ErrorText", "", new Vector2(0, -170), 28);
                 errorText.alignment = TextAlignmentOptions.Center;
                 errorText.color = Color.red;
                 errorText.gameObject.SetActive(false);
             }
+            else
+            {
+                RepositionLower(errorText, -170f);
+            }
+        }
+    }
+
+    private void RepositionLower(TextMeshProUGUI tmp, float yOffset)
+    {
+        if (tmp == null) return;
+        RectTransform rt = tmp.GetComponent<RectTransform>();
+        if (rt != null)
+        {
+            // Position feedback banner lower down so it's clear and unobscripted
+            rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, yOffset);
         }
     }
 
@@ -107,7 +127,7 @@ public class UIManager : MonoBehaviour
         rt.anchorMax = new Vector2(0.5f, 0.5f);
         rt.pivot = new Vector2(0.5f, 0.5f);
         rt.anchoredPosition = anchoredPos;
-        rt.sizeDelta = new Vector2(400, 50);
+        rt.sizeDelta = new Vector2(500, 50);
         return tmp;
     }
 
@@ -134,6 +154,7 @@ public class UIManager : MonoBehaviour
     public void ShowError(string message)
     {
         AutoDiscoverTextReferences();
+        Debug.Log($"[UI Error Feedback] {message}");
         if (errorText != null)
         {
             errorText.text = message;
@@ -155,6 +176,7 @@ public class UIManager : MonoBehaviour
     public void ShowCompletion(string message)
     {
         AutoDiscoverTextReferences();
+        Debug.Log($"[UI Status Feedback] {message}");
         if (statusText != null)
         {
             statusText.text = message;

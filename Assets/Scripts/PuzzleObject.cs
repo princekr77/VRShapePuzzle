@@ -76,7 +76,7 @@ public class PuzzleObject : MonoBehaviour
                 _releaseTime += Time.deltaTime;
                 if (_releaseTime > 2f) // 2 seconds grace period before auto-returning
                 {
-                    ReturnToOriginal();
+                    ReturnToOriginal(true);
                 }
             }
             else
@@ -200,33 +200,65 @@ public class PuzzleObject : MonoBehaviour
         socket.Occupy(this);
     }
 
-    public void ScheduleReturnToOriginal(float delay = 2f)
+    private bool _isPendingMisplacedReturn;
+
+    public void ScheduleReturnToOriginal(float delay = 2f, bool isMisplaced = true)
     {
         CancelScheduledReturn();
-        Invoke(nameof(ReturnToOriginal), delay);
+        _isPendingMisplacedReturn = isMisplaced;
+        Invoke(nameof(ExecuteScheduledReturn), delay);
+    }
+
+    private void ExecuteScheduledReturn()
+    {
+        ReturnToOriginal(_isPendingMisplacedReturn);
     }
 
     public void CancelScheduledReturn()
     {
+        CancelInvoke(nameof(ExecuteScheduledReturn));
         CancelInvoke(nameof(ReturnToOriginal));
     }
 
     public void ReturnToOriginal()
     {
+        ReturnToOriginal(false);
+    }
+
+    public void ReturnToOriginal(bool isMisplaced)
+    {
         _isGrabbed = false;
         _isHovered = false;
+        _isPendingMisplacedReturn = false;
         CancelScheduledReturn();
         SetHighlight(false);
 
         transform.position = originalPosition;
         transform.rotation = originalRotation;
 #if UNITY_6000_0_OR_NEWER
-        _rb.linearVelocity = Vector3.zero;
+        if (_rb != null) _rb.linearVelocity = Vector3.zero;
 #else
-        _rb.velocity = Vector3.zero;
+        if (_rb != null) _rb.velocity = Vector3.zero;
 #endif
-        _rb.angularVelocity = Vector3.zero;
+        if (_rb != null) _rb.angularVelocity = Vector3.zero;
         _releaseTime = 0f;
+
+        if (isMisplaced)
+        {
+            Debug.Log($"[Puzzle] MISPLACED OBJECT: '{gameObject.name}' ({objectType}) was misplaced! Returning to original position.");
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.ShowError($"Misplaced object ({objectType})! Returned to start.");
+            }
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayError();
+            }
+            if (HapticManager.Instance != null)
+            {
+                HapticManager.Instance.PlayErrorHaptic();
+            }
+        }
     }
 
     #endregion

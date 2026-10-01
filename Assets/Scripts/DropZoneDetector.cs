@@ -19,7 +19,7 @@ public class DropZoneDetector : MonoBehaviour
         // Object left the designated drop zone - schedule return to table
         if (!puzzleObj.isPlaced)
         {
-            puzzleObj.ScheduleReturnToOriginal(2f);
+            puzzleObj.ScheduleReturnToOriginal(2f, isMisplaced: true);
         }
     }
 }

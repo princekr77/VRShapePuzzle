@@ -31,6 +31,7 @@ public class SocketTrigger : MonoBehaviour
         if (_socket.CanAccept(puzzleObj))
         {
             // Correct
+            Debug.Log($"[Puzzle] CORRECT placement: Object '{puzzleObj.gameObject.name}' ({puzzleObj.objectType}) placed into socket '{gameObject.name}'.");
             puzzleObj.LockInSocket(_socket);
             if (AudioManager.Instance != null) AudioManager.Instance.PlaySuccess();
             if (HapticManager.Instance != null) HapticManager.Instance.PlayPlaceHaptic();
@@ -39,11 +40,9 @@ public class SocketTrigger : MonoBehaviour
         }
         else
         {
-            // Wrong
-            puzzleObj.ReturnToOriginal();
-            if (UIManager.Instance != null) UIManager.Instance.ShowError("Wrong socket! Try the matching shape.");
-            if (AudioManager.Instance != null) AudioManager.Instance.PlayError();
-            if (HapticManager.Instance != null) HapticManager.Instance.PlayErrorHaptic();
+            // Wrong / Misplaced
+            Debug.Log($"[Puzzle] MISPLACED OBJECT: '{puzzleObj.gameObject.name}' ({puzzleObj.objectType}) placed into wrong socket '{gameObject.name}' (accepts: {_socket.acceptedType})!");
+            puzzleObj.ReturnToOriginal(isMisplaced: true);
         }
     }
 }
