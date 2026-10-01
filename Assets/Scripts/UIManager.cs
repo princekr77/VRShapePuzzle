@@ -1,9 +1,27 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
-    public static UIManager Instance { get; private set; }
+    private static UIManager _instance;
+    public static UIManager Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = FindObjectOfType<UIManager>();
+                if (_instance == null)
+                {
+                    GameObject go = new GameObject("[UIManager]");
+                    _instance = go.AddComponent<UIManager>();
+                    DontDestroyOnLoad(go);
+                }
+            }
+            return _instance;
+        }
+    }
 
     [Header("UI Text References")]
     public TextMeshProUGUI timerText;
@@ -11,74 +29,91 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI statusText;
     public TextMeshProUGUI errorText;
 
-    private float _elapsedTime = 0f;
-    private bool _isTimerRunning = true;
-
     private void Awake()
     {
-        if (Instance != null && Instance != this)
+        if (_instance != null && _instance != this)
         {
             Destroy(gameObject);
             return;
         }
-        Instance = this;
+        _instance = this;
+        DontDestroyOnLoad(gameObject);
+
+        AutoDiscoverTextReferences();
     }
 
     private void Start()
     {
-        // Ensure timer and objects remaining text game objects are active and initialized
-        if (timerText != null)
+        AutoDiscoverTextReferences();
+    }
+
+    public void AutoDiscoverTextReferences()
+    {
+        TextMeshProUGUI[] allTexts = FindObjectsOfType<TextMeshProUGUI>(true);
+        foreach (var tmp in allTexts)
         {
-            timerText.gameObject.SetActive(true);
-            UpdateTimer(0f);
+            string name = tmp.gameObject.name.ToLower();
+            string content = tmp.text.ToLower();
+
+            if (timerText == null && (name.Contains("time") || name.Contains("timer") || content.Contains("time")))
+            {
+                timerText = tmp;
+            }
+            else if (objectsRemainingText == null && (name.Contains("remain") || name.Contains("object") || content.Contains("remain")))
+            {
+                objectsRemainingText = tmp;
+            }
+            else if (statusText == null && (name.Contains("status") || name.Contains("complete") || content.Contains("complete")))
+            {
+                statusText = tmp;
+            }
+            else if (errorText == null && (name.Contains("error") || name.Contains("wrong") || content.Contains("wrong")))
+            {
+                errorText = tmp;
+            }
         }
 
-        if (objectsRemainingText != null)
+        // If statusText or errorText are unassigned, attach them to the primary Canvas panel
+        Canvas mainCanvas = FindObjectOfType<Canvas>();
+        if (mainCanvas != null)
         {
-            objectsRemainingText.gameObject.SetActive(true);
-            int initialCount = (PuzzleManager.Instance != null) ? (PuzzleManager.Instance.totalObjects - PuzzleManager.Instance.placedObjects) : 3;
-            UpdateObjectsRemaining(initialCount);
-        }
-
-        // Keep status and error texts hidden until triggered
-        if (statusText != null && string.IsNullOrEmpty(statusText.text))
-        {
-            statusText.gameObject.SetActive(false);
-        }
-        if (errorText != null && string.IsNullOrEmpty(errorText.text))
-        {
-            errorText.gameObject.SetActive(false);
+            if (statusText == null)
+            {
+                statusText = CreateTMPText(mainCanvas.transform, "StatusText", "", new Vector2(0, 50), 32);
+                statusText.alignment = TextAlignmentOptions.Center;
+                statusText.color = Color.green;
+                statusText.gameObject.SetActive(false);
+            }
+            if (errorText == null)
+            {
+                errorText = CreateTMPText(mainCanvas.transform, "ErrorText", "", new Vector2(0, -50), 28);
+                errorText.alignment = TextAlignmentOptions.Center;
+                errorText.color = Color.red;
+                errorText.gameObject.SetActive(false);
+            }
         }
     }
 
-    private void Update()
+    private TextMeshProUGUI CreateTMPText(Transform parent, string name, string defaultText, Vector2 anchoredPos, float fontSize)
     {
-        if (_isTimerRunning)
-        {
-            _elapsedTime += Time.deltaTime;
-            UpdateTimer(_elapsedTime);
-        }
-    }
-
-    public void StartTimer()
-    {
-        _isTimerRunning = true;
-    }
-
-    public void StopTimer()
-    {
-        _isTimerRunning = false;
-    }
-
-    public void ResetTimer()
-    {
-        _elapsedTime = 0f;
-        _isTimerRunning = true;
-        UpdateTimer(_elapsedTime);
+        GameObject textGo = new GameObject(name);
+        textGo.transform.SetParent(parent, false);
+        var tmp = textGo.AddComponent<TextMeshProUGUI>();
+        tmp.text = defaultText;
+        tmp.fontSize = fontSize;
+        tmp.color = Color.white;
+        var rt = textGo.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0.5f, 0.5f);
+        rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = anchoredPos;
+        rt.sizeDelta = new Vector2(400, 50);
+        return tmp;
     }
 
     public void UpdateTimer(float timeInSeconds)
     {
+        AutoDiscoverTextReferences();
         if (timerText != null)
         {
             int minutes = Mathf.FloorToInt(timeInSeconds / 60F);
@@ -89,6 +124,7 @@ public class UIManager : MonoBehaviour
 
     public void UpdateObjectsRemaining(int count)
     {
+        AutoDiscoverTextReferences();
         if (objectsRemainingText != null)
         {
             objectsRemainingText.text = $"Objects Remaining: {count}";
@@ -97,12 +133,13 @@ public class UIManager : MonoBehaviour
 
     public void ShowError(string message)
     {
+        AutoDiscoverTextReferences();
         if (errorText != null)
         {
             errorText.text = message;
             errorText.gameObject.SetActive(true);
             CancelInvoke(nameof(ClearError));
-            Invoke(nameof(ClearError), 3f);
+            Invoke(nameof(ClearError), 3.5f);
         }
     }
 
@@ -117,6 +154,7 @@ public class UIManager : MonoBehaviour
 
     public void ShowCompletion(string message)
     {
+        AutoDiscoverTextReferences();
         if (statusText != null)
         {
             statusText.text = message;

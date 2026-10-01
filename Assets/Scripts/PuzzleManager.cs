@@ -1,96 +1,131 @@
-using Oculus.Interaction;
-using TMPro;
 using UnityEngine;
 
 public class PuzzleManager : MonoBehaviour
 {
-    public static PuzzleManager Instance;
-
-    public int totalObjects = 3;
-    public int placedObjects = 0;
-
-    public GameObject door;
-    public GameObject completionUI;
-
-    void Awake() => Instance = this;
-
-    private void Start()
+    private static PuzzleManager _instance;
+    public static PuzzleManager Instance
     {
-        if (UIManager.Instance != null)
+        get
         {
-            UIManager.Instance.UpdateObjectsRemaining(totalObjects - placedObjects);
+            if (_instance == null)
+            {
+                _instance = FindObjectOfType<PuzzleManager>();
+                if (_instance == null)
+                {
+                    GameObject go = new GameObject("[PuzzleManager]");
+                    _instance = go.AddComponent<PuzzleManager>();
+                    DontDestroyOnLoad(go);
+                }
+            }
+            return _instance;
+        }
+    }
+
+    [Header("Puzzle Settings")]
+    public int totalObjects = 3;
+    public int placedObjectsCount = 0;
+
+    [Header("Environment References")]
+    public Animator doorAnimator;
+
+    private float _timer = 0f;
+    private bool _isTimerRunning = true;
+    private bool _isPuzzleCompleted = false;
+
+    private void Awake()
+    {
+        if (_instance != null && _instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        _instance = this;
+        DontDestroyOnLoad(gameObject);
+    }
+
+    private void Update()
+    {
+        if (_isTimerRunning && !_isPuzzleCompleted)
+        {
+            _timer += Time.deltaTime;
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.UpdateTimer(_timer);
+            }
         }
     }
 
     public void OnObjectPlaced()
     {
-        placedObjects++;
+        placedObjectsCount++;
+
         if (UIManager.Instance != null)
         {
-            UIManager.Instance.UpdateObjectsRemaining(totalObjects - placedObjects);
+            UIManager.Instance.UpdateObjectsRemaining(totalObjects - placedObjectsCount);
         }
-        if (placedObjects >= totalObjects)
+
+        if (placedObjectsCount >= totalObjects && !_isPuzzleCompleted)
         {
             CompletePuzzle();
         }
     }
 
-    void CompletePuzzle()
+    private void CompletePuzzle()
     {
-        if (door != null && door.TryGetComponent<Animator>(out var doorAnimator))
+        _isPuzzleCompleted = true;
+        _isTimerRunning = false;
+
+        if (doorAnimator != null)
         {
             doorAnimator.SetTrigger("Open");
         }
-        if (completionUI != null)
-        {
-            completionUI.SetActive(true);
-        }
+
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlayCompletion();
         }
+
         if (UIManager.Instance != null)
         {
-            UIManager.Instance.StopTimer();
-            UIManager.Instance.ShowCompletion("Puzzle Completed!");
+            UIManager.Instance.ShowCompletion("Task Completed!");
         }
     }
 
     public void ResetPuzzle()
     {
-        placedObjects = 0;
-        // Find all PuzzleObjects, call ReturnToOriginal, re-enable grabbable
-        foreach (var obj in FindObjectsOfType<PuzzleObject>())
+        placedObjectsCount = 0;
+        _timer = 0f;
+        _isPuzzleCompleted = false;
+        _isTimerRunning = true;
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.UpdateObjectsRemaining(totalObjects);
+            UIManager.Instance.UpdateTimer(0f);
+            UIManager.Instance.ClearError();
+        }
+
+        PuzzleObject[] objects = FindObjectsOfType<PuzzleObject>();
+        foreach (var obj in objects)
         {
             obj.isPlaced = false;
             obj.isLocked = false;
-            if (obj.TryGetComponent<Rigidbody>(out var rb))
-            {
-                rb.isKinematic = false;
-            }
-            if (obj.TryGetComponent<Grabbable>(out var grabbable))
-            {
-                grabbable.enabled = true;
-            }
             obj.ReturnToOriginal();
+            var rb = obj.GetComponent<Rigidbody>();
+            if (rb != null) rb.isKinematic = false;
+            var grabbable = obj.GetComponent<Oculus.Interaction.Grabbable>();
+            if (grabbable != null) grabbable.enabled = true;
         }
-        // Reset sockets
-        foreach (var socket in FindObjectsOfType<PuzzleSocket>())
+
+        PuzzleSocket[] sockets = FindObjectsOfType<PuzzleSocket>();
+        foreach (var socket in sockets)
         {
             socket.ResetSocket();
         }
-        if (door != null && door.TryGetComponent<Animator>(out var doorAnimator))
-        {
-            doorAnimator.SetTrigger("Close");
-        }
-        if (completionUI != null)
-        {
-            completionUI.SetActive(false);
-        }
-        if (UIManager.Instance != null)
-        {
-            UIManager.Instance.ResetTimer();
-            UIManager.Instance.UpdateObjectsRemaining(totalObjects - placedObjects);
-        }
+    }
+
+    public void RestartTask()
+    {
+        ResetPuzzle();
     }
 }
